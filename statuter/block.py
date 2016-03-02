@@ -10,8 +10,8 @@ class Character(object):
 
 
 class Word(object):
-    def __init__(self, character):
-        self._characters = [character]
+    def __init__(self):
+        self._characters = []
 
     def add_character(self, character):
         self._characters.append(character)
@@ -56,8 +56,8 @@ class Word(object):
 
 
 class Line(object):
-    def __init__(self, word):
-        self._words = [word]
+    def __init__(self):
+        self._words = []
 
     def add_word(self, word):
         self._words.append(word)

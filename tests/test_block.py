@@ -27,7 +27,8 @@ class TestWord(object):
 
     @pytest.fixture
     def simple_word(self, char_f, char_o):
-        w = Word(char_f)
+        w = Word()
+        w.add_character(char_f)
         w.add_character(char_o)
         return w
 
@@ -54,14 +55,16 @@ class TestLine(object):
 
     @pytest.fixture
     def first_word(self):
-        w = Word(Character('f', 1.0, 1.1, 10.0, 11.0, size=5.0, font='Courier'))
+        w = Word()
+        w.add_character(Character('f', 1.0, 1.1, 10.0, 11.0, size=5.0, font='Courier'))
         w.add_character(Character('o', 1.1, 1.2, 10.0, 11.0, size=5.2, font='Courier'))
         w.add_character(Character('o', 1.2, 1.3, 10.0, 11.01, size=5.0, font='Arial'))
         return w
 
     @pytest.fixture
     def second_word(self):
-        w = Word(Character('b', 1.4, 1.5, 10.0, 11.0, size=5.0, font='Courier'))
+        w = Word()
+        w.add_character(Character('b', 1.4, 1.5, 10.0, 11.0, size=5.0, font='Courier'))
         w.add_character(Character('a', 1.5, 1.6, 10.0, 11.0, size=5.2, font='Courier'))
         w.add_character(Character('r', 1.6, 1.7, 10.01, 11.0, size=5.1, font='Arial'))
         w.add_character(Character('s', 1.7, 1.8, 10.0, 11.0, size=5.2, font='Arial'))
@@ -69,7 +72,8 @@ class TestLine(object):
 
     @pytest.fixture
     def line(self, first_word, second_word):
-        test_line = Line(first_word)
+        test_line = Line()
+        test_line.add_word(first_word)
         test_line.add_word(second_word)
         return test_line
 
