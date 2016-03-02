@@ -1,5 +1,5 @@
-from block import Character, Word, Line
 import pytest
+from statuter.block import Character, Word, Line
 
 
 class TestCharacter(object):
@@ -30,9 +30,6 @@ class TestWord(object):
         w = Word(char_f)
         w.add_character(char_o)
         return w
-
-    def test_add_character(self, char_f, char_o, simple_word):
-        assert simple_word._characters == [char_f, char_o]
 
     def test_text(self, simple_word):
         assert simple_word.text == 'fo'
@@ -76,9 +73,6 @@ class TestLine(object):
         test_line.add_word(second_word)
         return test_line
 
-    def test_add_word(self, line, first_word, second_word):
-        assert line._words == [first_word, second_word]
-
     def test_boundaries(self, line):
         assert line.left == 1.0
         assert line.right == 1.8
@@ -90,3 +84,6 @@ class TestLine(object):
 
     def test_mode_font(self, line):
         assert line.mode_font == 'Arial'
+
+    def test_text(self, line):
+        assert line.text == 'foo bars'

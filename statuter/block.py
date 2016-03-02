@@ -92,3 +92,7 @@ class Line(object):
 
         font, _ = sorted(fonts.items(), key=lambda f: (-f[1], f[0]))[0]
         return font
+
+    @property
+    def text(self):
+        return ' '.join([word.text for word in self._words])
