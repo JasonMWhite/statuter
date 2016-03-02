@@ -64,3 +64,4 @@ target/
 .idea
 bin/
 pyvenv.cfg
+pip-selfcheck.json
