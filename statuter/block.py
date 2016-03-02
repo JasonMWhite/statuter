@@ -8,13 +8,35 @@ class Character(object):
         self.size = size
         self.font = font
 
+    @property
+    def height(self):
+        return self.top - self.bottom
+
 
 class Word(object):
+
+    MAX_HORIZONTAL_OVERLAP = 0.01
+    MAX_HORIZONTAL_SPACING = 0.01
+    MIN_VERTICAL_OVERLAP_FRACTION = 0.95
+
     def __init__(self):
         self._characters = []
 
     def add_character(self, character):
-        self._characters.append(character)
+        if self.can_add(character):
+            self._characters.append(character)
+            return True
+        else:
+            return False
+
+    def vertical_overlap_fraction(self, chararacter):
+        intersection_length = min(self.top, chararacter.top) - max(self.bottom, chararacter.bottom)
+        return max(intersection_length / self.height, intersection_length / chararacter.height)
+
+    def can_add(self, character):
+        return self._characters == [] or \
+               (-self.MAX_HORIZONTAL_OVERLAP <= (character.left - self.right) <= self.MAX_HORIZONTAL_SPACING and
+                self.vertical_overlap_fraction(character) >= self.MIN_VERTICAL_OVERLAP_FRACTION)
 
     @property
     def text(self):
@@ -39,6 +61,10 @@ class Word(object):
     @property
     def bottom(self):
         return min([char.bottom for char in self._characters])
+
+    @property
+    def height(self):
+        return self.top - self.bottom
 
     @property
     def mean_size(self):
