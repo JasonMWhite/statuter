@@ -52,4 +52,3 @@ def test_remove_top_lines(content_path):
     assert 'A-l' not in bottom_ten_words
     assert 'Amiraute' not in bottom_ten_words
     assert word_count - len(page.words) == 6
-    
