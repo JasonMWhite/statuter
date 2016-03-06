@@ -118,7 +118,7 @@ class Page(object):
     def increment_by_point_one(self, left, right):
         return [x / 10.0 for x in range(int(round(left, 1) * 10), int(round(right, 1) * 10 + 1))]
 
-    def compute_vertical_lines(self):
+    def _compute_vertical_lines(self):
         bottom, top = self.text_bottom, self.text_top
         range_adjustment = max((top - bottom) * 0.05, self.MIN_MARGIN)
         bottom += range_adjustment
@@ -129,23 +129,44 @@ class Page(object):
             for entry in self.increment_by_point_one(word.left, word.right):
                 self.lines[entry] += 1
 
-    def middle_gap(self):
-        self.compute_vertical_lines()
+    def _middle_gap(self):
         left = self.text_left
         right = self.text_right
         sweep_range = right - left
         sweep_left, sweep_right = (sweep_range / 2) - sweep_range * 0.05, (sweep_range / 2) + sweep_range * 0.05
 
-        left_margin, right_margin = None, None
+        left_edge, right_edge = None, None
         for pt in self.increment_by_point_one(sweep_left, sweep_right):
             if self.lines[pt] == 0:
-                if left_margin is None:
-                    left_margin = pt
-                right_margin = pt
-            elif self.lines[pt] != 0 and left_margin is not None:
+                if left_edge is None:
+                    left_edge = pt
+                right_edge = pt
+            elif self.lines[pt] != 0 and left_edge is not None:
                 break
 
-        return left_margin, right_margin
+        return left_edge, right_edge
+
+    def _left_margin(self, gap_edge):
+        margin = self.left
+        for pt in self.increment_by_point_one(self.left, gap_edge):
+            if self.lines[pt] == 0 and pt != gap_edge:
+                margin = pt
+        return margin
+
+    def _right_margin(self, gap_edge):
+        margin = gap_edge
+        for pt in self.increment_by_point_one(gap_edge, self.right):
+            if self.lines[pt] == 0 and pt != gap_edge:
+                margin = pt
+                break
+        return margin
+
+    def column_margins(self):
+        self._compute_vertical_lines()
+        left_gap_edge, right_gap_edge = self._middle_gap()
+        left_edge = self._left_margin(left_gap_edge)
+        right_edge = self._right_margin(right_gap_edge)
+        return left_edge, left_gap_edge, right_gap_edge, right_edge
 
 
 class Line(object):
