@@ -198,19 +198,6 @@ class Page(object):
             for word in words_to_remove:
                 self.words.remove(word)
 
-    def remove_bottom_lines(self):
-        troublesome_words = []
-        for w in self.words:
-            if w.left <= self.right_gap_edge and w.right >= self.left_gap_edge:
-                troublesome_words.append(w)
-
-        if len(troublesome_words) > 0:
-            highest_edge = min([w.bottom for w in troublesome_words])
-
-            for word in self.words:
-                if word.top > highest_edge:
-                    self.words.remove(word)
-
 
 class Line(object):
     def __init__(self):
