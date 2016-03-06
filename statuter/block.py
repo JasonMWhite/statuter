@@ -246,7 +246,7 @@ class Page(object):
     def _check_header(self, line_text):
         header_match = re.search(r'^(\d+\.)(.*)', line_text)
         if header_match:
-            line_text = '**{}**{}'.format(*header_match.group(1, 2))
+            line_text = os.linesep + '**{}**{}'.format(*header_match.group(1, 2))
         return line_text
 
     def _check_letter_paragraph(self, line_text):
@@ -270,6 +270,8 @@ class Page(object):
         if prefix == '':
             markdown_text = self._check_header(markdown_text)
             markdown_text = self._check_letter_paragraph(markdown_text)
+        else:
+            prefix = os.linesep + prefix
 
         return prefix + markdown_text
 
