@@ -68,3 +68,5 @@ pip-selfcheck.json
 
 *.pdf
 *.md
+*.csv
+

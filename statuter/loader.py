@@ -71,3 +71,4 @@ def extract_pages(input_path, english_output, french_output, pages):
 
                 french_markdown = page.convert_to_markdown(page.french)
                 french_file.write(french_markdown)
+                print "Finished page {}".format(page_no)
