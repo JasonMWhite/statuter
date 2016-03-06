@@ -279,7 +279,7 @@ class Page(object):
         markdown_buffer = io.StringIO()
         for line in lines:
             markdown_line = self._convert_line_to_markdown(line)
-            markdown_buffer.write(unicode(markdown_line) + os.linesep)
+            markdown_buffer.write(markdown_line + os.linesep)
         output = markdown_buffer.getvalue()
         markdown_buffer.close()
         return output
