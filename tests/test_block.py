@@ -139,3 +139,26 @@ class TestLine(object):
 
     def test_text(self, line):
         assert line.text == 'foo bars'
+
+    def test_can_add(self, line):
+        third_word = Word()
+        third_word.add_character(Character(1.9, 2.0, 10.05, 11.05, size=5.2, font='Arial', text='z'))
+
+        fourth_word = Word()
+        fourth_word.add_character(Character(1.9, 2.0, 10.15, 11.15, size=5.2, font='Arial', text='z'))
+
+        assert line.can_add(third_word)
+        assert not line.can_add(fourth_word)
+
+    def test_add_word(self, line):
+        third_word = Word()
+        third_word.add_character(Character(1.9, 2.0, 10.05, 11.05, size=5.2, font='Arial', text='z'))
+
+        assert line.add_word(third_word)
+        assert line.text == 'foo bars z'
+
+        fourth_word = Word()
+        fourth_word.add_character(Character(2.0, 2.1, 10.15, 11.15, size=5.2, font='Arial', text='z'))
+
+        assert not line.can_add(fourth_word)
+        assert line.text == 'foo bars z'

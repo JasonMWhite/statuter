@@ -94,7 +94,7 @@ class Page(object):
         self.right = right
         self.bottom = bottom
         self.top = top
-        self.lines = {x: 0 for x in self._increment_by_point_one(self.left, self.right)}
+        self.sweep_lines = {x: 0 for x in self._increment_by_point_one(self.left, self.right)}
         self.left_edge, self.right_edge = None, None
         self.left_gap_edge, self.right_gap_edge = None, None
 
@@ -132,7 +132,7 @@ class Page(object):
         middle_words = [w for w in self.words if w.bottom >= bottom and w.top <= top]
         for word in middle_words:
             for entry in self._increment_by_point_one(word.left, word.right):
-                self.lines[entry] += 1
+                self.sweep_lines[entry] += 1
 
     def _middle_gap(self):
         left = self.text_left
@@ -142,11 +142,11 @@ class Page(object):
 
         left_edge, right_edge = None, None
         for pt in self._increment_by_point_one(sweep_left, sweep_right):
-            if self.lines[pt] == 0:
+            if self.sweep_lines[pt] == 0:
                 if left_edge is None:
                     left_edge = pt
                 right_edge = pt
-            elif self.lines[pt] != 0 and left_edge is not None:
+            elif self.sweep_lines[pt] != 0 and left_edge is not None:
                 break
 
         return left_edge, right_edge
@@ -154,14 +154,14 @@ class Page(object):
     def _left_margin(self, gap_edge):
         margin = self.left
         for pt in self._increment_by_point_one(self.left, gap_edge):
-            if self.lines[pt] == 0 and pt != gap_edge:
+            if self.sweep_lines[pt] == 0 and pt != gap_edge:
                 margin = pt
         return margin
 
     def _right_margin(self, gap_edge):
         margin = gap_edge
         for pt in self._increment_by_point_one(gap_edge, self.right):
-            if self.lines[pt] == 0 and pt != gap_edge:
+            if self.sweep_lines[pt] == 0 and pt != gap_edge:
                 margin = pt
                 break
         return margin
@@ -200,11 +200,26 @@ class Page(object):
 
 
 class Line(object):
+
+    MIN_VERTICAL_OVERLAP_FRACTION = 0.95
+
     def __init__(self):
         self._words = []
 
     def add_word(self, word):
-        self._words.append(word)
+        if self.can_add(word):
+            self._words.append(word)
+            return True
+        else:
+            return False
+
+    def vertical_overlap(self, word):
+        intersection_length = min(self.top, word.top) - max(self.bottom, word.bottom)
+        return max(intersection_length / self.height, intersection_length / word.height)
+
+    def can_add(self, word):
+        return self._words == [] or \
+            self.vertical_overlap(word) >= self.MIN_VERTICAL_OVERLAP_FRACTION
 
     @property
     def left(self):
@@ -221,6 +236,10 @@ class Line(object):
     @property
     def top(self):
         return max([word.top for word in self._words])
+
+    @property
+    def height(self):
+        return self.top - self.bottom
 
     @property
     def mean_size(self):
