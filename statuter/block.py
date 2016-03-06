@@ -83,13 +83,15 @@ class Word(object):
 
 class Page(object):
 
+    MIN_MARGIN = 10.0
+
     def __init__(self, left, right, bottom, top):
         self.words = []
         self.left = left
         self.right = right
         self.bottom = bottom
         self.top = top
-        self._lines = {x: 0 for x in self.increment_by_point_one(self.left, self.right)}
+        self.lines = {x: 0 for x in self.increment_by_point_one(self.left, self.right)}
 
     def add_words(self, words):
         self.words.extend(words)
@@ -97,13 +99,27 @@ class Page(object):
     def add_word(self, word):
         self.words.append(word)
 
+    @property
+    def text_bottom(self):
+        return min([w.bottom for w in self.words])
+
+    @property
+    def text_top(self):
+        return max([w.top for w in self.words])
+
     def increment_by_point_one(self, left, right):
         return [x / 10.0 for x in range(int(round(left, 1) * 10), int(round(right, 1) * 10 + 1))]
 
     def compute_vertical_lines(self):
-        for word in self.words:
+        bottom, top = self.text_bottom, self.text_top
+        range_adjustment = max((top - bottom) * 0.05, self.MIN_MARGIN)
+        bottom += range_adjustment
+        top -= range_adjustment
+
+        middle_words = [w for w in self.words if w.bottom >= bottom and w.top <= top]
+        for word in middle_words:
             for entry in self.increment_by_point_one(word.left, word.right):
-                self._lines[entry] += 1
+                self.lines[entry] += 1
 
 
 class Line(object):
