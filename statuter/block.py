@@ -107,6 +107,14 @@ class Page(object):
     def text_top(self):
         return max([w.top for w in self.words])
 
+    @property
+    def text_left(self):
+        return min([w.left for w in self.words])
+
+    @property
+    def text_right(self):
+        return max([w.right for w in self.words])
+
     def increment_by_point_one(self, left, right):
         return [x / 10.0 for x in range(int(round(left, 1) * 10), int(round(right, 1) * 10 + 1))]
 
@@ -120,6 +128,24 @@ class Page(object):
         for word in middle_words:
             for entry in self.increment_by_point_one(word.left, word.right):
                 self.lines[entry] += 1
+
+    def middle_gap(self):
+        self.compute_vertical_lines()
+        left = self.text_left
+        right = self.text_right
+        sweep_range = right - left
+        sweep_left, sweep_right = (sweep_range / 2) - sweep_range * 0.05, (sweep_range / 2) + sweep_range * 0.05
+
+        left_margin, right_margin = None, None
+        for pt in self.increment_by_point_one(sweep_left, sweep_right):
+            if self.lines[pt] == 0:
+                if left_margin is None:
+                    left_margin = pt
+                right_margin = pt
+            elif self.lines[pt] != 0 and left_margin is not None:
+                break
+
+        return left_margin, right_margin
 
 
 class Line(object):

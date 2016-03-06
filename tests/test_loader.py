@@ -26,3 +26,9 @@ def test_compute_vertical_lines(layout_path):
     page.compute_vertical_lines()
     assert page.lines[144.0] == 0
     assert page.lines[209.6] == 43
+
+
+def test_middle_gap(layout_path):
+    page = loader.get_page(layout_path, 24)
+
+    assert page.middle_gap() == (142.1, 149.4)
