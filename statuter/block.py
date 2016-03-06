@@ -1,5 +1,5 @@
 class Character(object):
-    def __init__(self, text, left, right, bottom, top, size=5.0, font='Courier'):
+    def __init__(self, left, right, bottom, top, text='', size=5.0, font='Courier'):
         self.text = text
         self.left = left
         self.right = right
@@ -79,6 +79,31 @@ class Word(object):
 
         font, _ = sorted(fonts.items(), key=lambda f: (-f[1], f[0]))[0]
         return font
+
+
+class Page(object):
+
+    def __init__(self, left, right, bottom, top):
+        self.words = []
+        self.left = left
+        self.right = right
+        self.bottom = bottom
+        self.top = top
+        self._lines = {x: 0 for x in self.increment_by_point_one(self.left, self.right)}
+
+    def add_words(self, words):
+        self.words.extend(words)
+
+    def add_word(self, word):
+        self.words.append(word)
+
+    def increment_by_point_one(self, left, right):
+        return [x / 10.0 for x in range(int(round(left, 1) * 10), int(round(right, 1) * 10 + 1))]
+
+    def compute_vertical_lines(self):
+        for word in self.words:
+            for entry in self.increment_by_point_one(word.left, word.right):
+                self._lines[entry] += 1
 
 
 class Line(object):

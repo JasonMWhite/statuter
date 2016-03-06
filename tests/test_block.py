@@ -1,12 +1,12 @@
 import pytest
-from statuter.block import Character, Word, Line
+from statuter.block import Character, Word, Line, Page
 
 
 class TestCharacter(object):
 
     @pytest.fixture
     def char(self):
-        return Character('f', 1.0, 2.0, 10.0, 11.0)
+        return Character(1.0, 2.0, 10.0, 11.0, text='f')
 
     def test_init(self, char):
         assert char.text == 'f'
@@ -25,11 +25,11 @@ class TestWord(object):
 
     @pytest.fixture
     def char_f(self):
-        return Character('f', 1.0, 1.1, 10.0, 10.5, size=5.0)
+        return Character(1.0, 1.1, 10.0, 10.5, size=5.0, text='f')
 
     @pytest.fixture
     def char_o(self):
-        return Character('o', 1.1, 1.2, 10.01, 10.51, size=5.5)
+        return Character(1.1, 1.2, 10.01, 10.51, size=5.5, text='o')
 
     @pytest.fixture
     def simple_word(self, char_f, char_o):
@@ -39,9 +39,9 @@ class TestWord(object):
         return w
 
     def test_add_character(self, char_f, char_o):
-        char_b = Character('b', 1.2, 1.3, 10.4, 10.8, size=4.0)
-        char_a = Character('a', 1.25, 1.35, 10.0, 10.5, size=4.0)
-        char_r = Character('r', 1.15, 1.25, 10.0, 10.5, size=4.0)
+        char_b = Character(1.2, 1.3, 10.4, 10.8, size=4.0, text='b')
+        char_a = Character(1.25, 1.35, 10.0, 10.5, size=4.0, text='a')
+        char_r = Character(1.15, 1.25, 10.0, 10.5, size=4.0, text='r')
         w = Word()
         assert w.add_character(char_f)
         assert w.add_character(char_o)
@@ -66,10 +66,10 @@ class TestWord(object):
         assert round(simple_word.height, 2) == 0.51
 
     def test_vertical_overlap_fraction(self, simple_word):
-        char1 = Character('1', 1.2, 1.3, 10.1, 10.4, size=5.0)
-        char2 = Character('2', 1.2, 1.3, 9.9, 10.6, size=6.0)
-        char3 = Character('3', 1.2, 1.3, 10.51, 11.01, size=5.5)
-        char4 = Character('4', 1.2, 1.3, 10.26, 10.76, size=5.5)
+        char1 = Character(1.2, 1.3, 10.1, 10.4, size=5.0, text='1')
+        char2 = Character(1.2, 1.3, 9.9, 10.6, size=6.0, text='2')
+        char3 = Character(1.2, 1.3, 10.51, 11.01, size=5.5, text='3')
+        char4 = Character(1.2, 1.3, 10.26, 10.76, size=5.5, text='4')
 
         assert simple_word.vertical_overlap_fraction(char1) == 1.0
         assert simple_word.vertical_overlap_fraction(char2) == 1.0
@@ -83,23 +83,39 @@ class TestWord(object):
         assert simple_word.mode_font == 'Courier'
 
 
+class TestPage(object):
+
+    def test_add_word(self):
+        w1 = Word()
+        w2 = Word()
+        page = Page(0.0, 300.0, 0.0, 305.0)
+        page.add_word(w1)
+        page.add_word(w2)
+
+        assert len(page.words) == 2
+        assert page.left == 0.0
+        assert page.right == 300.0
+        assert page.bottom == 0.0
+        assert page.top == 305.0
+
+
 class TestLine(object):
 
     @pytest.fixture
     def first_word(self):
         w = Word()
-        w.add_character(Character('f', 1.0, 1.1, 10.0, 11.0, size=5.0, font='Courier'))
-        w.add_character(Character('o', 1.1, 1.2, 10.0, 11.0, size=5.2, font='Courier'))
-        w.add_character(Character('o', 1.2, 1.3, 10.0, 11.01, size=5.0, font='Arial'))
+        w.add_character(Character(1.0, 1.1, 10.0, 11.0, size=5.0, font='Courier', text='f'))
+        w.add_character(Character(1.1, 1.2, 10.0, 11.0, size=5.2, font='Courier', text='o'))
+        w.add_character(Character(1.2, 1.3, 10.0, 11.01, size=5.0, font='Arial', text='o'))
         return w
 
     @pytest.fixture
     def second_word(self):
         w = Word()
-        w.add_character(Character('b', 1.4, 1.5, 10.0, 11.0, size=5.0, font='Courier'))
-        w.add_character(Character('a', 1.5, 1.6, 10.0, 11.0, size=5.2, font='Courier'))
-        w.add_character(Character('r', 1.6, 1.7, 10.01, 11.0, size=5.1, font='Arial'))
-        w.add_character(Character('s', 1.7, 1.8, 10.0, 11.0, size=5.2, font='Arial'))
+        w.add_character(Character(1.4, 1.5, 10.0, 11.0, size=5.0, font='Courier', text='b'))
+        w.add_character(Character(1.5, 1.6, 10.0, 11.0, size=5.2, font='Courier', text='a'))
+        w.add_character(Character(1.6, 1.7, 10.01, 11.0, size=5.1, font='Arial', text='r'))
+        w.add_character(Character(1.7, 1.8, 10.0, 11.0, size=5.2, font='Arial', text='s'))
         return w
 
     @pytest.fixture
