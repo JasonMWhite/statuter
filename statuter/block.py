@@ -80,6 +80,9 @@ class Word(object):
         font, _ = sorted(fonts.items(), key=lambda f: (-f[1], f[0]))[0]
         return font
 
+    def __repr__(self):
+        return self.text
+
 
 class Page(object):
 
@@ -92,6 +95,8 @@ class Page(object):
         self.bottom = bottom
         self.top = top
         self.lines = {x: 0 for x in self._increment_by_point_one(self.left, self.right)}
+        self.left_edge, self.right_edge = None, None
+        self.left_gap_edge, self.right_gap_edge = None, None
 
     def add_words(self, words):
         self.words.extend(words)
@@ -161,12 +166,50 @@ class Page(object):
                 break
         return margin
 
-    def column_margins(self):
+    def compute_column_margins(self):
         self._compute_vertical_lines()
-        left_gap_edge, right_gap_edge = self._middle_gap()
-        left_edge = self._left_margin(left_gap_edge)
-        right_edge = self._right_margin(right_gap_edge)
-        return left_edge, left_gap_edge, right_gap_edge, right_edge
+        self.left_gap_edge, self.right_gap_edge = self._middle_gap()
+        self.left_edge = self._left_margin(self.left_gap_edge)
+        self.right_edge = self._right_margin(self.right_gap_edge)
+        return self.left_edge, self.left_gap_edge, self.right_gap_edge, self.right_edge
+
+    def remove_troublesome_lines(self):
+        troublesome_words = []
+        top, bottom = self.text_top, self.text_bottom
+        range_adjustment = max((top - bottom) * 0.05, self.MIN_MARGIN)
+        top -= range_adjustment
+        bottom += range_adjustment
+
+        for w in self.words:
+            if w.left <= self.right_gap_edge and w.right >= self.left_gap_edge:
+                troublesome_words.append(w)
+
+        if len(troublesome_words) > 0:
+            highest_edge = min([w.bottom for w in troublesome_words if w.top > top])
+            lowest_edge = max([w.top for w in troublesome_words if w.bottom < bottom])
+
+            words_to_remove = []
+            for word in self.words:
+                if word.top > highest_edge:
+                    words_to_remove.append(word)
+                elif word.bottom < lowest_edge:
+                    words_to_remove.append(word)
+
+            for word in words_to_remove:
+                self.words.remove(word)
+
+    def remove_bottom_lines(self):
+        troublesome_words = []
+        for w in self.words:
+            if w.left <= self.right_gap_edge and w.right >= self.left_gap_edge:
+                troublesome_words.append(w)
+
+        if len(troublesome_words) > 0:
+            highest_edge = min([w.bottom for w in troublesome_words])
+
+            for word in self.words:
+                if word.top > highest_edge:
+                    self.words.remove(word)
 
 
 class Line(object):
