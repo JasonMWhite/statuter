@@ -91,7 +91,7 @@ class Page(object):
         self.right = right
         self.bottom = bottom
         self.top = top
-        self.lines = {x: 0 for x in self.increment_by_point_one(self.left, self.right)}
+        self.lines = {x: 0 for x in self._increment_by_point_one(self.left, self.right)}
 
     def add_words(self, words):
         self.words.extend(words)
@@ -115,7 +115,7 @@ class Page(object):
     def text_right(self):
         return max([w.right for w in self.words])
 
-    def increment_by_point_one(self, left, right):
+    def _increment_by_point_one(self, left, right):
         return [x / 10.0 for x in range(int(round(left, 1) * 10), int(round(right, 1) * 10 + 1))]
 
     def _compute_vertical_lines(self):
@@ -126,7 +126,7 @@ class Page(object):
 
         middle_words = [w for w in self.words if w.bottom >= bottom and w.top <= top]
         for word in middle_words:
-            for entry in self.increment_by_point_one(word.left, word.right):
+            for entry in self._increment_by_point_one(word.left, word.right):
                 self.lines[entry] += 1
 
     def _middle_gap(self):
@@ -136,7 +136,7 @@ class Page(object):
         sweep_left, sweep_right = (sweep_range / 2) - sweep_range * 0.05, (sweep_range / 2) + sweep_range * 0.05
 
         left_edge, right_edge = None, None
-        for pt in self.increment_by_point_one(sweep_left, sweep_right):
+        for pt in self._increment_by_point_one(sweep_left, sweep_right):
             if self.lines[pt] == 0:
                 if left_edge is None:
                     left_edge = pt
@@ -148,14 +148,14 @@ class Page(object):
 
     def _left_margin(self, gap_edge):
         margin = self.left
-        for pt in self.increment_by_point_one(self.left, gap_edge):
+        for pt in self._increment_by_point_one(self.left, gap_edge):
             if self.lines[pt] == 0 and pt != gap_edge:
                 margin = pt
         return margin
 
     def _right_margin(self, gap_edge):
         margin = gap_edge
-        for pt in self.increment_by_point_one(gap_edge, self.right):
+        for pt in self._increment_by_point_one(gap_edge, self.right):
             if self.lines[pt] == 0 and pt != gap_edge:
                 margin = pt
                 break
