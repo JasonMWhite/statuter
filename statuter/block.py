@@ -185,30 +185,58 @@ class Page(object):
                 troublesome_words.append(w)
 
         if len(troublesome_words) > 0:
-            highest_edge = min([w.bottom for w in troublesome_words if w.top > top])
-            lowest_edge = max([w.top for w in troublesome_words if w.bottom < bottom])
+            highest_words = [w.bottom for w in troublesome_words if w.top > top]
+            lowest_words = [w.top for w in troublesome_words if w.bottom < bottom]
 
             words_to_remove = []
             for word in self.words:
-                if word.top > highest_edge:
+                if len(highest_words) > 0 and word.top > min(highest_words):
                     words_to_remove.append(word)
-                elif word.bottom < lowest_edge:
+                if len(lowest_words) > 0 and word.bottom < max(lowest_words):
                     words_to_remove.append(word)
 
             for word in words_to_remove:
                 self.words.remove(word)
 
+    def _extract_language(self, left, right):
+        language_words = [word for word in self.words if word.left > left and word.right < right]
+        language_words.sort(key=lambda word: (-word.bottom, word.left))
+
+        line = Line()
+        lines = []
+
+        for word in language_words:
+            if not line.add_word(word):
+                line.sort_words()
+                lines.append(line)
+                line = Line()
+                line.add_word(word)
+
+        if len(line.words) != 0:
+            line.sort_words()
+            lines.append(line)
+
+        return lines
+
+    @property
+    def english(self):
+        return self._extract_language(self.left_edge, self.left_gap_edge)
+
+    @property
+    def french(self):
+        return self._extract_language(self.right_gap_edge, self.right_edge)
+
 
 class Line(object):
 
-    MIN_VERTICAL_OVERLAP_FRACTION = 0.95
+    MIN_VERTICAL_OVERLAP_FRACTION = 0.8
 
     def __init__(self):
-        self._words = []
+        self.words = []
 
     def add_word(self, word):
         if self.can_add(word):
-            self._words.append(word)
+            self.words.append(word)
             return True
         else:
             return False
@@ -218,24 +246,24 @@ class Line(object):
         return max(intersection_length / self.height, intersection_length / word.height)
 
     def can_add(self, word):
-        return self._words == [] or \
+        return self.words == [] or \
             self.vertical_overlap(word) >= self.MIN_VERTICAL_OVERLAP_FRACTION
 
     @property
     def left(self):
-        return min([word.left for word in self._words])
+        return min([word.left for word in self.words])
 
     @property
     def right(self):
-        return max([word.right for word in self._words])
+        return max([word.right for word in self.words])
 
     @property
     def bottom(self):
-        return min([word.bottom for word in self._words])
+        return min([word.bottom for word in self.words])
 
     @property
     def top(self):
-        return max([word.top for word in self._words])
+        return max([word.top for word in self.words])
 
     @property
     def height(self):
@@ -243,14 +271,14 @@ class Line(object):
 
     @property
     def mean_size(self):
-        weighted_size = sum([word.num_chars * word.mean_size for word in self._words])
-        total_size = sum([word.num_chars for word in self._words])
+        weighted_size = sum([word.num_chars * word.mean_size for word in self.words])
+        total_size = sum([word.num_chars for word in self.words])
         return weighted_size / total_size
 
     @property
     def mode_font(self):
         fonts = {}
-        for word in self._words:
+        for word in self.words:
             fonts[word.mode_font] = fonts.get(word.mode_font, 0) + word.num_chars
 
         font, _ = sorted(fonts.items(), key=lambda f: (-f[1], f[0]))[0]
@@ -258,4 +286,11 @@ class Line(object):
 
     @property
     def text(self):
-        return ' '.join([word.text for word in self._words])
+        return ' '.join([word.text for word in self.words])
+
+    def sort_words(self):
+        self.words.sort(key=lambda word: word.left)
+
+    def __repr__(self):
+        data = ' '.join([word.text for word in self.words])
+        return "<Line text='{}'>".format(data)

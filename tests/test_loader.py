@@ -17,7 +17,7 @@ def test_content(content_path):
     page = loader.get_page(content_path, 24)
 
     output = ' '.join([page.words[i].text for i in range(20, 40)])
-    assert output == 'any description of vessel used in navigation and not propelled by oars ; &quot;surrogate judge&quot; means a surrogate judge in'
+    assert output == 'vessel used in navigation and not propelled by oars ; &quot;surrogate judge&quot; means a surrogate judge in Admiralty of the'
 
 
 def test_compute_column_margins(layout_path):
@@ -27,21 +27,6 @@ def test_compute_column_margins(layout_path):
 
 def test_remove_top_lines(content_path):
     page = loader.get_page(content_path, 24)
-    page.compute_column_margins()
-
-    top_ten_words = [w.text for w in page.words[0:10]]
-    bottom_ten_words = [w.text for w in page.words[-10:]]
-
-    assert 'Chap.' in top_ten_words
-    assert 'A-l' in top_ten_words
-    assert 'Amiraute' in top_ten_words
-    assert 'Chap.' in bottom_ten_words
-    assert 'A-l' in bottom_ten_words
-    assert 'Amiraute' in bottom_ten_words
-    word_count = len(page.words)
-
-    page.remove_troublesome_lines()
-
     top_ten_words = [w.text for w in page.words[0:10]]
     bottom_ten_words = [w.text for w in page.words[-10:]]
 
@@ -51,4 +36,14 @@ def test_remove_top_lines(content_path):
     assert 'Chap.' not in bottom_ten_words
     assert 'A-l' not in bottom_ten_words
     assert 'Amiraute' not in bottom_ten_words
-    assert word_count - len(page.words) == 6
+    assert len(page.words) == 761
+
+
+def test_languages(content_path):
+    page = loader.get_page(content_path, 24)
+
+    assert page.english[0].text == 'President or a puisne judge of that Court ;'
+    assert len(page.english) == 45
+
+    assert page.french[0].text == 'amiraute de la Cour de 1 Echiquier, nomme'
+    assert len(page.french) == 53

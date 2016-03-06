@@ -56,4 +56,7 @@ def get_page(path, page_number):
     parser.setContentHandler(content_loader)
 
     parser.parse(path)
+
+    content_loader.page.compute_column_margins()
+    content_loader.page.remove_troublesome_lines()
     return content_loader.page
