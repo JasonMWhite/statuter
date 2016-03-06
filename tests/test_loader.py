@@ -38,6 +38,7 @@ def test_remove_top_lines(content_path):
     assert 'Chap.' in bottom_ten_words
     assert 'A-l' in bottom_ten_words
     assert 'Amiraute' in bottom_ten_words
+    word_count = len(page.words)
 
     page.remove_troublesome_lines()
 
@@ -50,3 +51,5 @@ def test_remove_top_lines(content_path):
     assert 'Chap.' not in bottom_ten_words
     assert 'A-l' not in bottom_ten_words
     assert 'Amiraute' not in bottom_ten_words
+    assert word_count - len(page.words) == 6
+    
