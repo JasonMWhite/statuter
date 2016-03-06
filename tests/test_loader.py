@@ -43,14 +43,14 @@ def test_languages(content_path):
     page = loader.get_page(content_path, 24)
 
     assert page.english[0].text == 'President or a puisne judge of that Court ;'
-    assert len(page.english) == 45
+    assert len(page.english) == 43
 
     assert page.french[0].text == 'amiraute de la Cour de 1 Echiquier, nomme'
-    assert len(page.french) == 53
+    assert len(page.french) == 52
 
 
 def test_convert_to_markdown(content_path):
     page = loader.get_page(content_path, 24)
-    english = page.english[7:10]
+    english = page.english[6:9]
     markdown = page.convert_to_markdown(english)
     assert markdown == '## CONSTITUTION OF COURT\n**3.** (1) The Exchequer Court of Canada\ncontinues to be a Court of Admiralty and to\n'

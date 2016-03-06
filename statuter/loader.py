@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from xml.sax import make_parser, handler
 from statuter.block import Page, Word, Character
 
@@ -17,7 +16,7 @@ class RscLoader(handler.ContentHandler):
         if name == 'page' and attrs.get('id') == self._page_number:
             self._on_current_page = True
             left, bottom, right, top = self._extract_bbox(attrs['bbox'])
-            self.page = Page(left, right, bottom, top)
+            self.page = Page(self._page_number, left, right, bottom, top)
 
         if self._on_current_page is True and name == 'text':
             left, bottom, right, top = self._extract_bbox(attrs['bbox'])
@@ -31,7 +30,7 @@ class RscLoader(handler.ContentHandler):
         if name == 'page':
             self._on_current_page = False
 
-        if self.page is not None and name == 'text':
+        if self._on_current_page is True and name == 'text':
             if self._current_word is None:
                 self._current_word = Word()
                 self.page.add_word(self._current_word)
@@ -60,3 +59,16 @@ def get_page(path, page_number):
     content_loader.page.compute_column_margins()
     content_loader.page.remove_troublesome_lines()
     return content_loader.page
+
+
+def extract_pages(input_path, english_output, french_output, pages):
+    with open(english_output, 'w') as english_file:
+        with open(french_output, 'w') as french_file:
+            for page_no in pages:
+                page = get_page(input_path, page_no)
+                english_markdown = page.convert_to_markdown(page.english)
+                english_file.write(english_markdown)
+
+                french_markdown = page.convert_to_markdown(page.french)
+                french_file.write(french_markdown)
+                print "Extracted page {}".format(page_no)

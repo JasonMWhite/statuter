@@ -1,6 +1,7 @@
 import io
 import os
 import re
+import string
 
 
 class Character(object):
@@ -77,6 +78,11 @@ class Word(object):
         return total_size / len(self._characters)
 
     @property
+    def fraction_capitalized(self):
+        caps = [char for char in self._characters if char.text in string.ascii_uppercase]
+        return len(caps) / float(len(self._characters))
+
+    @property
     def mode_font(self):
         fonts = {}
         for char in self._characters:
@@ -92,11 +98,14 @@ class Word(object):
 class Page(object):
 
     MIN_MARGIN = 10.0
+    HEADER_CAP_THRESHOLD = 0.9
     HEADER_1_THRESHOLD_SIZE = 7.9
     HEADER_2_THRESHOLD_SIZE = 4.9
+    GAP_RANGE_FRACTION = 0.2
 
-    def __init__(self, left, right, bottom, top):
+    def __init__(self, page_no, left, right, bottom, top):
         self.words = []
+        self.page_no = page_no
         self.left = left
         self.right = right
         self.bottom = bottom
@@ -130,13 +139,15 @@ class Page(object):
     def _increment_by_point_one(self, left, right):
         return [x / 10.0 for x in range(int(round(left, 1) * 10), int(round(right, 1) * 10 + 1))]
 
-    def _compute_vertical_lines(self):
-        bottom, top = self.text_bottom, self.text_top
-        range_adjustment = max((top - bottom) * 0.05, self.MIN_MARGIN)
-        bottom += range_adjustment
-        top -= range_adjustment
+    def _vertical_range_adjustment(self):
+        distinct_lines = sorted(set([word.bottom for word in self.words]))
+        range_adjustment = min(len(distinct_lines) * 0.25, 10)
+        return distinct_lines[range_adjustment], distinct_lines[-range_adjustment]
 
-        middle_words = [w for w in self.words if w.bottom >= bottom and w.top <= top]
+    def _compute_vertical_lines(self):
+        bottom, top = self._vertical_range_adjustment()
+
+        middle_words = [w for w in self.words if w.bottom >= bottom and w.bottom <= top]
         for word in middle_words:
             for entry in self._increment_by_point_one(word.left, word.right):
                 self.sweep_lines[entry] += 1
@@ -144,8 +155,9 @@ class Page(object):
     def _middle_gap(self):
         left = self.text_left
         right = self.text_right
-        sweep_range = right - left
-        sweep_left, sweep_right = (sweep_range / 2) - sweep_range * 0.05, (sweep_range / 2) + sweep_range * 0.05
+        midpoint = (right - left) / 2
+        sweep_range = (right - left) * self.GAP_RANGE_FRACTION / 2
+        sweep_left, sweep_right = midpoint - sweep_range, midpoint + sweep_range
 
         left_edge, right_edge = None, None
         for pt in self._increment_by_point_one(sweep_left, sweep_right):
@@ -156,6 +168,7 @@ class Page(object):
             elif self.sweep_lines[pt] != 0 and left_edge is not None:
                 break
 
+        assert left_edge is not None and right_edge is not None, "Couldn't find middle gap on page {}".format(self.page_no)
         return left_edge, right_edge
 
     def _left_margin(self, gap_edge):
@@ -182,18 +195,15 @@ class Page(object):
 
     def remove_troublesome_lines(self):
         troublesome_words = []
-        top, bottom = self.text_top, self.text_bottom
-        range_adjustment = max((top - bottom) * 0.05, self.MIN_MARGIN)
-        top -= range_adjustment
-        bottom += range_adjustment
+        bottom, top = self._vertical_range_adjustment()
 
         for w in self.words:
             if w.left <= self.right_gap_edge and w.right >= self.left_gap_edge:
                 troublesome_words.append(w)
 
         if len(troublesome_words) > 0:
-            highest_words = [w.bottom for w in troublesome_words if w.top > top]
-            lowest_words = [w.top for w in troublesome_words if w.bottom < bottom]
+            highest_words = [w.bottom for w in troublesome_words if w.bottom >= top]
+            lowest_words = [w.top for w in troublesome_words if w.bottom <= bottom]
 
             words_to_remove = []
             for word in self.words:
@@ -248,11 +258,16 @@ class Page(object):
     def _convert_line_to_markdown(self, line):
         prefix = ''
         markdown_text = line.text
-        if line.mean_size >= self.HEADER_1_THRESHOLD_SIZE:
-            prefix = '# '
-        elif line.mean_size >= self.HEADER_2_THRESHOLD_SIZE:
-            prefix = '## '
-        else:
+        markdown_text = markdown_text.replace('_', ' ')
+        markdown_text = markdown_text.replace('&quot;', '"')
+
+        if all([word.fraction_capitalized >= self.HEADER_CAP_THRESHOLD for word in line.words]):
+            if line.mean_size >= self.HEADER_1_THRESHOLD_SIZE:
+                prefix = '# '
+            elif line.mean_size >= self.HEADER_2_THRESHOLD_SIZE:
+                prefix = '## '
+
+        if prefix == '':
             markdown_text = self._check_header(markdown_text)
             markdown_text = self._check_letter_paragraph(markdown_text)
 
@@ -270,7 +285,7 @@ class Page(object):
 
 class Line(object):
 
-    MIN_VERTICAL_OVERLAP_FRACTION = 0.8
+    MIN_VERTICAL_OVERLAP_FRACTION = 0.5
 
     def __init__(self):
         self.words = []

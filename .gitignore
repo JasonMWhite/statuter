@@ -65,3 +65,6 @@ target/
 bin/
 pyvenv.cfg
 pip-selfcheck.json
+
+*.pdf
+*.md
