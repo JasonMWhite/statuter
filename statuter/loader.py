@@ -21,7 +21,7 @@ class RscLoader(handler.ContentHandler):
 
         if self._on_current_page is True and name == 'text':
             left, bottom, right, top = self._extract_bbox(attrs['bbox'])
-            self._current_character = Character(left, right, bottom, top, size=attrs['size'], font=attrs['font'])
+            self._current_character = Character(left, right, bottom, top, size=float(attrs['size']), font=attrs['font'])
 
     def characters(self, content):
         if self._current_character is not None:

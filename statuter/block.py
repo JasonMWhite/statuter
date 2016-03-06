@@ -1,3 +1,8 @@
+import io
+import os
+import re
+
+
 class Character(object):
     def __init__(self, left, right, bottom, top, text='', size=5.0, font='Courier'):
         self.text = text
@@ -87,6 +92,8 @@ class Word(object):
 class Page(object):
 
     MIN_MARGIN = 10.0
+    HEADER_1_THRESHOLD_SIZE = 7.9
+    HEADER_2_THRESHOLD_SIZE = 4.9
 
     def __init__(self, left, right, bottom, top):
         self.words = []
@@ -225,6 +232,40 @@ class Page(object):
     @property
     def french(self):
         return self._extract_language(self.right_gap_edge, self.right_edge)
+
+    def check_header(self, line_text):
+        header_match = re.search(r'^(\d+\.)(.*)', line_text)
+        if header_match:
+            line_text = '**{}**{}'.format(*header_match.group(1, 2))
+        return line_text
+
+    def check_letter_paragraph(self, line_text):
+        letter_match = re.search(r'^^\(([a-z]+)\)( .*)', line_text)
+        if letter_match:
+            line_text = '  * (_{}_){}'.format(*letter_match.group(1, 2))
+        return line_text
+
+    def convert_line_to_markdown(self, line):
+        prefix = ''
+        markdown_text = line.text
+        if line.mean_size >= self.HEADER_1_THRESHOLD_SIZE:
+            prefix = '# '
+        elif line.mean_size >= self.HEADER_2_THRESHOLD_SIZE:
+            prefix = '## '
+        else:
+            markdown_text = self.check_header(markdown_text)
+            markdown_text = self.check_letter_paragraph(markdown_text)
+
+        return prefix + markdown_text
+
+    def convert_to_markdown(self, lines):
+        markdown_buffer = io.StringIO()
+        for line in lines:
+            markdown_line = self.convert_line_to_markdown(line)
+            markdown_buffer.write(unicode(markdown_line) + os.linesep)
+        output = markdown_buffer.getvalue()
+        markdown_buffer.close()
+        return output
 
 
 class Line(object):
