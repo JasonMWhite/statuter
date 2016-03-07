@@ -65,6 +65,9 @@ def get_page(path, page_number):
     except DocumentFinishedException:
         pass
 
+    if len(content_loader.page.words) < 10:
+        content_loader.page.words = []
+
     if content_loader.page.words != []:
         content_loader.page.compute_column_margins()
         content_loader.page.remove_troublesome_lines()

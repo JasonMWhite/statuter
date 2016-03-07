@@ -146,7 +146,7 @@ class Page(object):
 
     def _vertical_range_adjustment(self):
         distinct_lines = sorted(set([word.bottom for word in self.words]))
-        range_adjustment = min(len(distinct_lines) * 0.25, 10)
+        range_adjustment = int(round(len(distinct_lines) * 0.10, 0))
         return distinct_lines[range_adjustment], distinct_lines[-range_adjustment]
 
     def _compute_vertical_lines(self):
@@ -160,7 +160,7 @@ class Page(object):
     def _middle_gap(self):
         left = self.text_left
         right = self.text_right
-        midpoint = (right - left) / 2
+        midpoint = (right - left) / 2 + left
         sweep_range = (right - left) * self.GAP_RANGE_FRACTION / 2
         sweep_left, sweep_right = midpoint - sweep_range, midpoint + sweep_range
 
