@@ -28,7 +28,9 @@ class RscLoader(handler.ContentHandler):
 
     def endElement(self, name):
         if name == 'page':
-            self._on_current_page = False
+            if self._on_current_page is True:
+                self._on_current_page = False
+                raise DocumentFinishedException()
 
         if self._on_current_page is True and name == 'text':
             if self._current_word is None:
@@ -49,19 +51,29 @@ class RscLoader(handler.ContentHandler):
         return [float(x) for x in bbox.split(',')]
 
 
+class DocumentFinishedException(Exception):
+    pass
+
+
 def get_page(path, page_number):
     parser = make_parser()
     content_loader = RscLoader(page_number)
     parser.setContentHandler(content_loader)
 
-    parser.parse(path)
+    try:
+        parser.parse(path)
+    except DocumentFinishedException:
+        pass
 
-    content_loader.page.compute_column_margins()
-    content_loader.page.remove_troublesome_lines()
+    if content_loader.page.words != []:
+        content_loader.page.compute_column_margins()
+        content_loader.page.remove_troublesome_lines()
+
     return content_loader.page
 
 
 def extract_pages(input_path, english_output, french_output, pages):
+    print("Beginning pages {}-{}".format(min(pages), max(pages)))
     with open(english_output, 'w') as english_file:
         with open(french_output, 'w') as french_file:
             for page_no in pages:
@@ -71,4 +83,5 @@ def extract_pages(input_path, english_output, french_output, pages):
 
                 french_markdown = page.convert_to_markdown(page.french)
                 french_file.write(french_markdown)
-                print "Finished page {}".format(page_no)
+                print("Finished page {}".format(page_no))
+    print("Finished pages {}-{}".format(min(pages), max(pages)))

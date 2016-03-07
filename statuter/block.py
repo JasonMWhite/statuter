@@ -80,7 +80,12 @@ class Word(object):
     @property
     def fraction_capitalized(self):
         caps = [char for char in self._characters if char.text in string.ascii_uppercase]
-        return len(caps) / float(len(self._characters))
+        non_caps = [char for char in self._characters if char.text in string.ascii_lowercase]
+        total = len(caps) + len(non_caps)
+        if total == 0:
+            return 1.0
+        else:
+            return float(len(caps)) / total
 
     @property
     def mode_font(self):
@@ -99,7 +104,7 @@ class Page(object):
 
     MIN_MARGIN = 10.0
     HEADER_CAP_THRESHOLD = 0.9
-    HEADER_1_THRESHOLD_SIZE = 7.9
+    HEADER_1_THRESHOLD_SIZE = 7.5
     HEADER_2_THRESHOLD_SIZE = 4.9
     GAP_RANGE_FRACTION = 0.2
 
